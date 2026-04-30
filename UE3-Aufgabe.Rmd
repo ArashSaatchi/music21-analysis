@@ -1,0 +1,326 @@
+---
+title: "ESMV Aufgabe zu UE3"
+output: html_document
+date: "2026-03-17"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+Problembehebung von show.score() unter Windows. Für Mac User nicht notwendig.
+
+```{python}
+#____________________________________________________________________
+# habe eine lösung gefubden-1 SAATCHI 
+# =>(r vor 'C muss sein  und hier braucht keine write)
+from music21 import environment
+us = environment.UserSettings()
+us['musescoreDirectPNGPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+us['musicxmlPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+#____________________________________________________________________
+
+import subprocess
+import os
+
+_original_init = subprocess.Popen.__init__
+
+def _patched_init(self, *args, **kwargs):
+    # Fehlende Handles durch DEVNULL ersetzen
+    for key in ('stdin', 'stdout', 'stderr'):
+        if key not in kwargs:
+            kwargs[key] = subprocess.DEVNULL
+    _original_init(self, *args, **kwargs)
+
+subprocess.Popen.__init__ = _patched_init
+```
+
+#Aufgabe 1/2/3/4
+Bitte kopieren Sie diese Datei für jede Aufgabe.
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+
+from music21 import corpus
+import os
+
+score = corpus.parse("beethoven/opus132")
+
+#Suchen nach einem Komponisten im music21-Korpus
+paths = corpus.getComposer("Beethoven")
+
+#Einlesen einer Komposition
+score = corpus.parse(paths[0])
+
+score = corpus.parse("beethoven/opus132")
+
+#____________________________________________________________________
+# habe eine lösung gefubden-2 SAATCHI:
+
+# macht und nent  eine musicxml file von gewelte music zb. Jetz von : ("beethoven/opus132") -> dauert bischen
+fp = score.write('musicxml')
+
+
+#Zeigt musicxml file Adresse: C:\Users\User\AppData\Local\Temp\music21\(zb.: tmpg28a9pta oder andere name ).musicxml 
+print(fp)
+
+
+#Start File (z.b in music score )
+os.startfile(fp)
+
+#_____________________________________________________________________
+
+#Extrahieren einer Stimme (Violine I)
+violin = score.parts[0]
+
+#Extrahieren eines Taktes aus der Stimme
+measure = violin[1]
+
+#Takte können auch über die measure() Funktion ausgelesen werden
+measure_one = violin.measure(1)
+
+import subprocess
+
+# macht und nent  eine musicxml file von gewelte music  : ("beethoven/opus132") -> und rename -> edited_score.musicxml - dauert bischen
+fp=r'C:\Users\User\Desktop\edited_score.musicxml')
+
+# macht eine copy und nent  eine musicxml file von gewelte music  : ("beethoven/opus132") ->nent -> edited_score 
+fp = score.write('musicxml',
+
+subprocess.Popen([r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe', fp])
+ 
+#macht änderung:
+score.parts[0].measure(1).append(note.Note('C5'))
+
+#änderung done save changed score:
+fp = score.write('musicxml', 
+
+# macht  wieder noch mal eine neue copy ( mit änderung) und renam zu ->my_score.musicxml und ändert oder write was Sie geschrieben in diesee xml file(my-score) - dauert bischen
+
+fp='C:/Users/User/Desktop/my_score.musicxml'
+
+# open file in default app (MuseScore if associated) mit änderung :-) - dauert bischen
+
+os.startfile(fp)
+
+
+# Aber es ist schön :-),  und :
+
+# score.show() Funktioniert wieder nicht , und:
+
+# Aber Frage : os.startfile(fp) ist fast selbe oder ? 
+
+#MfG 
+
+#____________________________________________________________________
+
+
+#AUFGABEN UE3
+
+
+#Clef___________________________________________________________________
+
+print(list(measure_one.recurse().getElementsByClass(clef.Clef)))
+#antwort: [<music21.clef.TrebleClef>]
+
+# für löchen :  
+# for c in list(violin.recurse().getElementsByClass(clef.Clef)):c.activeSite.remove(c)
+# für schreiben :insert
+
+alto = clef.AltoClef()
+m = stream.Measure([alto])
+m.append(note.Note('C4'))
+
+bass = clef.BassClef()
+m.append(bass)
+m.append(note.Note('C4'))
+
+# Antwort : C4 = C4 clef No Mather 
+
+#End-Clef
+
+#Mehrstimmigkeit______________________________________________________
+cMinor = chord.Chord(['C4','G4','E-5'])
+#chord
+
+
+violin2 = score.parts[1]
+measure_four = violin2.measure(4)
+print(list(measure_four.recurse().getElementsByClass(stream.Voice)))
+#keine voice in 4te takt violin 2 im beethoven/opus132
+
+print(list(measure_four.recurse().getElementsByClass(chord.Chord)))
+#Aber 2 ton Als chord  in 4te takt violin 2 im beethoven/opus132
+#Antwort [<music21.chord.Chord A3 F#4>]
+
+
+#interval ?
+
+#End-Mehrstimmigkeit
+
+#Triole____________________________________________________________
+d = duration.Duration()
+d.quarterLength = 0.5
+d.type
+'eighth'
+d.tupets
+
+
+a = duration.Duration('quarter')
+b = duration.durationTupleFromTypeDots('quarter', 0)
+a.addDurationTuple(b)
+a.quarterLength
+
+tup = duration.Tuplet(3, 2)
+d = duration.Duration(1.0)
+d.appendTuplet(tup)
+d.quarterLength
+Fraction(2, 3)
+t2 = duration.Tuplet(5, 4)
+d.appendTuplet(t2)
+d.quarterLength
+Fraction(8, 15)
+tup.frozen
+
+
+violin2 = score.parts[1]
+measure_four = violin2.measure(4)
+
+for note in measure_four.recurse().notes:
+  if note.duration.tuplets:
+    print("Note:", note)
+     print("Tuplet:",note.duration.tuplets)
+
+#Antwort:  Tuplet: (), 
+#keine triole in 4te takt violin 2 im beethoven/opus132
+
+#End-Triole
+
+#Haltebogen-Tie____________________________________________________________
+
+ 
+ c0 = note.Note('C4')
+c0.tie = tie.Tie('start')
+c1 = note.Note('C4')
+c1.tie = tie.Tie('continue')
+c2 = note.Note('C4')
+c2.tie = tie.Tie('stop')
+s = stream.Measure()
+s.append([c0, c1, c2])
+
+
+s = stream.Stream()
+for tie_style in ('normal', 'dotted', 'dashed', 'hidden'):
+    nStart = note.Note('E4')
+    tStart = tie.Tie('start')
+    tStart.style = tie_style
+    nStart.tie = tStart
+    nStop = note.Note('E4')
+    tStop = tie.Tie('stop')
+    tStop.style = tie_style # optional
+    nStop.tie = tStop
+    s.append([nStart, nStop])
+
+
+violin2 = score.parts[1]
+measure_four = violin2.measure(4)
+
+n1 = score.recurse().notes[1]
+n1
+ #Antwort :<music21.note.Note E>
+for note in measure_four.recurse().notes:
+  if note.tie :
+    print("Note:", note.nameWithOctave, note.tie)
+      #Antwort :Note: G#4 None
+      
+      violin1 = score.parts[0]
+measure_eghit = violin1.measure(8)
+    for note in measure_eghit.recurse().notes:
+  if note.tie :
+    print("Note:", note.nameWithOctave, note.tie)
+
+#Bindebogen-Slur___________________________________________________________
+violin1 = score.parts[0]
+measure_eghit = violin1.measure(8)
+slurs = list(measure_eghit.recurse().getElementsByClass(spanner.Slur))
+print(slurs)
+ for slure in slurs:
+    for note in slurs.getSpannedElements():
+        print("Note:", n.nameWithOctave)
+     
+     
+p = converter.parse("tinynotation: 4/4 c4 d e f g a b c' b a g2")
+c = p.recurse().notes[0]
+d = p.recurse().notes[1]
+sl1 = spanner.Slur([c, d])
+sl1
+
+violin2 = score.parts[1]
+   print(len(list(score.recurse().getElementsByClass(spanner.Slur))))
+    #Antwort :  3177
+    
+  for slur in score.recurse().getElementsByClass(spanner.Slur):
+    for n in slur.getSpannedElements():
+        if hasattr(n, "nameWithOctave"):
+            print(n.nameWithOctave)
+    #Antwort : All note name :
+    
+    part = score.parts[1]   
+
+for m in range(1, 31):
+    measure = part.measure(m)
+    if measure is None:
+     
+ print("Takt:", m)
+
+    slurs = measure.recurse().getElementsByClass(spanner.Slur)
+
+    for s in slurs:
+        for n in s.getSpannedElements():
+            if hasattr(n, "nameWithOctave"):
+                print("Note:", n.nameWithOctave)
+
+  for slur in score.recurse().getElementsByClass(spanner.Slur):
+    for n in slur.getSpannedElements():
+        if hasattr(n, "nameWithOctave"):
+            print(n.nameWithOctave)
+   
+#End____________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+

@@ -1,0 +1,99 @@
+---
+title: "ESMV UE6"
+output: html_document
+date: "2026-04-20"
+---
+
+```{r}
+rm(list = ls())
+
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+## music21 Grundlagen
+Online-Referenz aller Module von music21:
+https://music21.org/music21docs/moduleReference/index.html
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+```
+
+#Filtern von Streams
+
+```{python}
+piece = corpus.parse('beethoven/opus18no1/movement1.mxl')
+
+#Einige vordefinierte Filter: Noten & Pausen, Noten, Klassen, Offsets
+
+#Noten Filter
+list(piece.recurse().notes)
+
+#Noten und Pausen Filter
+list(piece.recurse().notesAndRests)
+
+#Klassen Filter (in diesem Fall für Noten und Pausen)
+notes_and_rests = stream.filters.ClassFilter(["Rest", "Note"])
+
+#nicht alle Filter verhalten sich wie man es erwartet
+len(list(piece.recurse().notesAndRests))
+
+notes_and_rests = stream.filters.ClassFilter(["Rest", "Note"])
+
+#Wenn wir nach Noten und Pausen filtern bekommen wir weniger Ergebnisse.
+len(list(piece.recurse().addFilter(notes_and_rests)))
+
+#Der .notesAndRests Filter enthält auch Akkorde.
+notes_and_rests_and_chords = stream.filters.ClassFilter(["Rest", "Note", "Chord"])
+
+#Nun stimmt die Anzahl überein.
+len(list(piece.recurse().addFilter(notes_and_rests_and_chords)))
+
+#Wir können auch nach Offsets filtern.
+first_elements = stream.filters.OffsetFilter(0,0)
+
+#Ein Filter kann mit .addFilter zu einem Iterator (recurse / flatten) hinzugefügt werden.
+list(piece.recurse().addFilter(first_elements))
+
+#Mehrere Filter können kombiniert werden.
+list(piece.recurse().addFilter(first_elements).notes)
+
+#Filter können auch einfacher angewandt werden.
+
+#Kurzform des Klassenfilters
+piece.recurse().getElementsByClass(["Notes"])
+
+#Kurzform des Offsetfilters
+piece.recurse().getElementsByOffset(0,0)
+
+
+#Kürzeste Form des Klassenfilters
+list(piece[note.Note])
+list(piece[clef.Clef])
+
+#Wir können uns auch eine Stimme aussuchen und direkt nach den Schlüssel suchen.
+list(piece[1][clef.Clef])
+
+#Ergebnisse sollten in der Partitur überprüft werden.
+piece.show()
+```

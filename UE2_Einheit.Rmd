@@ -1,0 +1,42 @@
+---
+title: "ESMV UE2"
+output: html_document
+date: "2026-03-03"
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Toolchain
+
+Grundlegende Tools, die wir für diese Übung benötigen:
+
+1)  R Programmiersprache installieren <https://cran.r-project.org/>
+2)  RStudio Entwicklungsumgebung für R und Python <https://posit.co/download/rstudio-desktop/> In RStudio muss unter Tools -> Global Options -> Code -> Use native pipe operator aktiviert sein.
+3)  Musescore zur Visualisierung <https://musescore.org/de/download>
+
+Benötigte Packages:
+
+```{r echo=FALSE}
+rm(list = ls())
+.rs.restartR()
+install.packages(c("reticulate", "tidyverse", "rstudioapi", "devtools", "rlang", "RSQLite", "xml2"))
+
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+```

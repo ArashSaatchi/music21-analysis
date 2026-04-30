@@ -1,0 +1,191 @@
+---
+title: "ESMV UE4"
+output: html_document
+date: "2026-03-23"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+## music21 Grundlagen
+Generelle Einführung in automatische Verarbeitung von Notenmaterial mittels Programmiersprachen.
+Wie bereitet music21 symbolische Musikdaten auf?
+
+Online-Referenz aller Module von music21:
+https://music21.org/music21docs/moduleReference/index.html
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+
+#Suchen nach einem Komponisten im music21-Korpus
+#Resultate werden in Variable gespeichert
+paths = corpus.getComposer("Beethoven")
+
+#Einlesen einer Komposition
+score = corpus.parse(paths[0])
+
+score = corpus.parse("beethoven/opus132")
+
+#Anzeigen einer Komposition in Musescore
+score.show()
+
+#Extrahieren einer Stimme (Violine I)
+violin = score[1]
+
+#Extrahieren eines Taktes aus der Stimme
+measure = violin[2]
+
+#Takte können auch über die measure() Funktion ausgelesen werden
+measure_three = violin.measure(3)
+
+#Extrahieren einer Note aus dem abgespeicherten Takt
+note = measure_three[1]
+
+#Eigenschaften einer Note in music21
+note.beat
+note.beatDuration
+note.fullName
+
+#Noten bestehen unter anderem aus den Objekten "Pitch" und "Duration"
+n_pitch = note.pitch
+#Eigenschaften eines Pitch
+n_pitch.midi
+
+#Duration einer Note auslesen
+n_dur = note.duration
+
+#Eigenschaften eines Duration Objektes einer Note
+n_dur.quarterLength
+
+#### UE4 ####
+
+
+## Besprechung der Aufgaben ##
+
+# Mehrstimmigkeit mittels Akkorden
+# Erstellen eines Akkordes
+chord_new = chord.Chord(["C4", "E4", "G4"])
+
+chord_new
+
+#Länge eines Akkordes (Standard = eine Viertel) 
+chord_new.duration
+
+# Ein Akkord kann auch aus Noten erstellt werden
+
+note_f = note.Note("F4")
+note_a = note.Note("A4")
+note_cis = note.Note("C#5")
+
+chord_notes = chord.Chord([note_f, note_a, note_cis])
+
+chord_notes
+
+# Funktion des Chord Objektes verwenden
+chord_new.isConsonant()
+chord_notes.isConsonant()
+
+# Wie werden Triolen repräsentiert?
+part = score[1]
+ms = part.measure(12)
+
+# Dauer einer Note in einer Triole wird als Bruch (1/3) dargestellt
+ms[3].duration
+
+# Art des Tuplet wird in dem Attribut .tuplet gespeichert
+ms[3].duration.tuplets
+
+# Wie werden Noten in anderen Schlüsseln repräsentiert?
+viola = score.parts[2]
+t_m = viola.measures(2, 2)
+tt_m = t_m[4]
+tt_m[1]
+
+viola.atSoundingPitch
+viola.toWrittenPitch()
+
+# Wie werden Bindebögen gehandhabt?
+viola = score.parts[2]
+
+# Bindebögen werden mittels Spanner-Objekt außerhalb der Takte repräsentiert
+viola[2]
+
+# Mittels der Funktion .getSpannedElements() können Sie die Noten aus dem Spanner auslesen
+spanned_elements = viola[2].getSpannedElements()
+
+# .activeSite zeigt an, in welchem Takt der Spanner ist
+spanned_elements[0].activeSite
+
+
+# Wie werden Haltebögen repräsentiert?
+cello = score.parts[3]
+t_m = cello.measure(18)
+t_m[0]
+t_m[0].tie
+t_m[0].next('Note') #tie stop vergessen
+
+## Bauen eines Streams um ein Stück darzustellen ##
+
+# Anlegen von Noten; jede Note braucht ein eigenes Noten Objekt
+note_a = note.Note("C4")
+note_b = note.Note("D4")
+
+# Jede Note braucht eine Länge
+note_a.duration = duration.Duration("16th")
+note_b.duration = duration.Duration("whole")
+
+
+# Anlegen eines Taktes
+measure = stream.base.Measure(1)
+
+#Hinzufügen der Noten zu dem Takt
+measure.append(note_a)
+measure.append(note_b)
+
+#Erstellen einer Stimme (Part)
+part = stream.base.Part()
+part.partName = "Trompete I"
+
+#Hinzufügen des Taktes zu der Stimme
+part.append(measure)
+
+part.show()
+
+# Windows Nutzer verwenden statt part.show() folgenden Code:
+fp = measure.write('musicxml')
+import os
+os.startfile(fp)
+
+
+#### Schleifen um Streqms zu durchlaufen ####
+for e in score:
+  print(e)
+  
+for m in score[1]:
+  print(m)
+  
+# hier werden wir in der 5. Einheit weiterarbeiten  
+  
+```

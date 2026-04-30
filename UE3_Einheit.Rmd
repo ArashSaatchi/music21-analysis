@@ -1,0 +1,121 @@
+---
+title: "ESMV Aufgabe zu UE3"
+output: html_document
+date: "2026-03-17"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+Problembehebung von show.score() unter Windows. Für Mac User nicht notwendig.
+
+```{python}
+#____________________________________________________________________
+# habe eine lösung gefubden-1 SAATCHI 
+# =>(r vor 'C muss sein  und hier braucht keine write)
+from music21 import environment
+us = environment.UserSettings()
+us['musescoreDirectPNGPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+us['musicxmlPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+#____________________________________________________________________
+
+import subprocess
+import os
+
+_original_init = subprocess.Popen.__init__
+
+def _patched_init(self, *args, **kwargs):
+    # Fehlende Handles durch DEVNULL ersetzen
+    for key in ('stdin', 'stdout', 'stderr'):
+        if key not in kwargs:
+            kwargs[key] = subprocess.DEVNULL
+    _original_init(self, *args, **kwargs)
+
+subprocess.Popen.__init__ = _patched_init
+```
+
+#Aufgabe 1/2/3/4
+Bitte kopieren Sie diese Datei für jede Aufgabe.
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+
+from music21 import corpus
+import os
+
+score = corpus.parse("beethoven/opus132")
+
+#Suchen nach einem Komponisten im music21-Korpus
+paths = corpus.getComposer("Beethoven")
+
+#Einlesen einer Komposition
+score = corpus.parse(paths[0])
+
+score = corpus.parse("beethoven/opus132")
+
+#____________________________________________________________________
+# habe eine lösung gefubden-2 SAATCHI:
+
+# macht und nent  eine musicxml file von gewelte music zb. Jetz von : ("beethoven/opus132")
+fp = score.write('musicxml')
+
+#Zeigt musicxml file Adresse: C:\Users\User\AppData\Local\Temp\music21\(zb.: tmpg28a9pta oder andere name ).musicxml
+print(fp)
+
+#Start File
+os.startfile(fp)
+#_____________________________________________________________________
+
+#Extrahieren einer Stimme (Violine I)
+violin = score[1]
+
+#Extrahieren eines Taktes aus der Stimme
+measure = violin[2]
+
+#Takte können auch über die measure() Funktion ausgelesen werden
+measure_three = violin.measure(3)
+
+#Extrahieren einer Note aus dem abgespeicherten Takt
+note = measure_three[1]
+
+#Eigenschaften einer Note in music21
+note.beat
+note.beatDuration
+note.fullName
+
+#Noten bestehen unter anderem aus den Objekten "Pitch" und "Duration"
+n_pitch = note.pitch
+#Eigenschaften eines Pitch
+n_pitch.midi
+
+#Duration einer Note auslesen
+n_dur = note.duration
+
+#Eigenschaften eines Duration Objektes einer Note
+n_dur.quarterLength
+```
+

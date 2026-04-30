@@ -1,0 +1,55 @@
+---
+title: "ESMV UE5"
+output: html_document
+date: "2026-04-13"
+---
+
+```{r}
+rm(list = ls())
+
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+## music21 Grundlagen
+Online-Referenz aller Module von music21:
+https://music21.org/music21docs/moduleReference/index.html
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+
+```
+
+```{python}
+
+```
+
+```{python}
+
+```
+
+```{python}
+
+```
+
+
+```{python}
+
+```

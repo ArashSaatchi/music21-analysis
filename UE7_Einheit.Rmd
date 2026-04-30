@@ -1,0 +1,98 @@
+---
+title: "ESMV UE7"
+output: html_document
+date: "2026-04-27"
+---
+
+```{r}
+rm(list = ls())
+
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+## music21 Grundlagen
+Online-Referenz aller Module von music21:
+https://music21.org/music21docs/moduleReference/index.html
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+```
+
+
+```{python}
+piece = corpus.parse("bach/bwv65.2.xml")
+
+#Aufgabenstellung: Wie viele aufsteigende Intervalle kommen im Bach Choral vor?
+
+#Auslesen aller Noten aus dem Stream mittels recurse() und .notes Filter.
+notes = list(piece.recurse().notes)
+
+#Zählen der aufsteigenden Intervalle
+int_up = 0
+
+#Mittels range() bekommen wir eine Liste mit allen Indizes der notes Liste.
+#Hier ist mir in der LVA ein kleiner Fehler unterlaufen:
+#Die Funktion range() muss natürlich mit 0 starten (wie Frau Yamada richtig angemerkt hat).
+
+for i in range(0, len(notes)-1):
+  #Wenn die aktuelle Note einen kleineren MIDI Wert hat als die nächste,
+  #haben wir ein aufsteigendes Intervall gefunden und zählen dieses.
+  if notes[i].pitch.midi < notes[i+1].pitch.midi:
+    int_up = int_up + 1 
+
+#Wir können auch gleichzeitig steigende und fallende Intervalle zählen.    
+int_up = 0
+int_down = 0
+
+for i in range(0, len(notes)-1):
+  if notes[i].pitch.midi < notes[i+1].pitch.midi:
+    int_up = int_up + 1     
+  elif notes[i].pitch.midi > notes[i+1].pitch.midi:
+    int_down = int_down + 1     
+    
+```
+
+```{python}
+#Definition einer Filter-Funktion um halbe Noten zu filtern
+#Wenn der Filter auf einen Stream angewandt wird, wird jedes Element (el)
+#in diesem Stream der Filter-Funktion weitergereicht.
+#Wenn die Filterkriterien erfüllt sind (halbe Note), gibt die Funktion "True" zurück (return True).
+#Ansonsten gibt die Funktion "False" zurück.
+
+def halbenoten_filter(el):
+  #isinstance() überprüft, ob das Element eine Note oder ein Akkord ist.
+  #Alle anderen Elemente sind nicht relevant - ein Clef z.B. kann keine halbe Note sein.
+  if isinstance(el, note.Note) or isinstance(el, chord.Chord):
+    if el.duration.quarterLength == 1:
+      return True
+    else:
+      return False
+  else:
+    return False
+
+#Mit .addFilter können wir unseren Filter verwenden,
+#und direkt in einer Liste "list()" darstellen.
+list(piece.recurse().addFilter(halbenoten_filter))
+
+```

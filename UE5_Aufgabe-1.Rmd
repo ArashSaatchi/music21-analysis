@@ -1,0 +1,404 @@
+---
+title: "ESMV UE5 Aufgabe"
+output: html_document
+date: "2026-03-13"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+import os
+
+#(!!! neue gefunden)
+#!!!-configure.run()
+#Konfigurieren von music21
+#[1] - No - No - Yes
+# Die Funktion configure.run() wird hier nicht verwendet,
+# weil sie unter Windows oft hängen bleibt.
+# Deshalb werden die Pfade zu MuseScore direkt manuell gesetzt.
+
+
+# Laden des Beethoven Streichquartetts Opus 132
+# aus dem music21-Corpus
+score = corpus.parse("beethoven/opus132")
+
+
+# music21
+from music21 import environment
+# Zugriff auf die Einstellungen von music21
+us = environment.UserSettings()
+
+
+# Pfad zum Öffnen von MusicXML-Dateien mit MuseScore 4
+us['musicxmlPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+
+
+# Pfad zum Rendern von PNG-Dateien mit MuseScore 4
+us['musescoreDirectPNGPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+
+
+
+#_______________________
+# Aufgabe zu Übung 5
+#_______________________
+
+
+
+
+# Diese Funktion zählt nur explizit notierte Taktarten in den Takten.
+# Die erste gefundene Taktart zählt nicht als Wechsel.
+# Ein Wechsel wird nur dann gezählt, wenn sich die Taktart wirklich ändert.
+def count_real_time_signature_changes(part_or_score):
+
+    # Falls ein ganzer Score übergeben wird,
+    # nehmen wir zur Gesamtanalyse die erste Stimme,
+    # weil in einem Streichquartett die Taktarten normalerweise
+    # in allen Stimmen gleich sind.
+    if hasattr(part_or_score, "parts") and len(part_or_score.parts) > 0:
+        obj = part_or_score.parts[0]
+    else:
+        obj = part_or_score
+
+    measures = obj.getElementsByClass(stream.Measure)
+
+    explicit_ts = []
+
+    # Alle Takte durchlaufen
+    for m in measures:
+
+        # Nur explizit im Takt notierte TimeSignature-Objekte sammeln
+        ts_in_measure = m.getElementsByClass(meter.TimeSignature)
+
+        if len(ts_in_measure) > 0:
+            explicit_ts.append(ts_in_measure[0].ratioString)
+
+    # Gesamtzahl aller explizit notierten TimeSignature-Objekte
+    total_ts = len(explicit_ts)
+
+    # Wenn keine oder nur eine Taktart notiert ist,
+    # gibt es keinen Wechsel
+    if total_ts <= 1:
+        return total_ts, 0, explicit_ts
+
+    changes = 0
+    previous = explicit_ts[0]
+
+    # Ab der zweiten expliziten Taktart vergleichen
+    for current in explicit_ts[1:]:
+        if current != previous:
+            changes += 1
+            previous = current
+
+    return total_ts, changes, explicit_ts
+
+
+
+
+
+
+#_______________________
+# Aufgabe 1-1:
+# Analyse für den gesamten Score
+
+
+
+
+
+
+gesamt_ts, gesamt_wechsel, gesamt_liste = count_real_time_signature_changes(score)
+
+print("1.1 Gesamtzahl explizit notierter TimeSignature-Objekte:")
+print(gesamt_ts)
+
+
+
+
+
+
+
+
+#_______________________
+# Aufgabe 1-2:
+# Analyse pro Stimme
+
+
+
+
+
+print("\n1.2 Tatsächliche Taktartwechsel im gesamten Score:")
+print(gesamt_wechsel)
+
+print("\nTaktartwechsel pro Stimme:")
+
+for i, part in enumerate(score.parts, start=1):
+    part_total, part_changes, part_list = count_real_time_signature_changes(part)
+
+    print(f"\nStimme {i}")
+    print(f"Explizit notierte TimeSignature-Objekte: {part_total}")
+    print(f"Tatsächliche Wechsel: {part_changes}")
+    print(f"Taktartenfolge: {part_list}")
+
+
+
+
+
+#_______________________
+# Aufgabe 2-1:
+#Analyse der Vorzeichen (Accidentals)
+
+
+
+
+
+# Dictionary für die verschiedenen accidental-Typen
+# Es werden nur b, #, bb und ## gezählt
+accidental_counts = {
+    "b": 0,     # flat
+    "#": 0,     # sharp
+    "bb": 0,    # double flat
+    "##": 0     # double sharp
+}
+
+# Alle Noten des gesamten Scores durchlaufen
+for el in score.recurse().notes:
+
+    # Fall 1: einzelne Note
+    if isinstance(el, note.Note):
+        if el.pitch.accidental is not None:
+            acc = el.pitch.accidental.modifier
+
+            if acc in accidental_counts:
+                accidental_counts[acc] += 1
+
+   #Wichtig ohne Akkord ergebnis ist falsch 
+  # (!!!Neuegefunden ) elif(bedeuted zweite auch  checken und in ergebnid rechnen )
+      #WEIL  in music 21 kann etwas nicht gleichzeitig note und chord sein .
+      
+      #problrm : VERTRAUEN ????
+      
+      
+      # wie konnen wir verstehen in welche Art und weise in noten satz program -> xml ist gespeichert note chord Voice interval ???
+      
+    
+     # Fall 2: Akkord 
+    elif isinstance(el, chord.Chord):
+        for p in el.pitches:
+            if p.accidental is not None:
+                acc = p.accidental.modifier
+
+                if acc in accidental_counts:
+                    accidental_counts[acc] += 1
+                    
+                    
+                    
+                    
+              # Fall 3: alle + voice
+
+accidental_counts = {
+    "b": 0,
+    "#": 0,
+    "bb": 0,
+    "##": 0
+}
+
+for el in score.recurse():
+
+    if isinstance(el, note.Note):
+        if el.pitch.accidental is not None:
+            acc = el.pitch.accidental.modifier
+            if acc in accidental_counts:
+                accidental_counts[acc] += 1
+
+    elif isinstance(el, chord.Chord):
+        for p in el.pitches:
+            if p.accidental is not None:
+                acc = p.accidental.modifier
+                if acc in accidental_counts:
+                    accidental_counts[acc] += 1
+
+    elif isinstance(el, stream.Voice):
+        for n in el.recurse().notes:
+
+            if isinstance(n, note.Note):
+                if n.pitch.accidental is not None:
+                    acc = n.pitch.accidental.modifier
+                    if acc in accidental_counts:
+                        accidental_counts[acc] += 1
+
+            elif isinstance(n, chord.Chord):
+                for p in n.pitches:
+                    if p.accidental is not None:
+                        acc = p.accidental.modifier
+                        if acc in accidental_counts:
+                            accidental_counts[acc] += 1
+                    
+
+ Gesamtzahl alle accidentals berechnen
+#total_accidentals = sum(accidental_counts.values())
+
+print("### Aufgabe 2.1 ###")
+print("Gesamtzahl aller accidentals:")
+print(total_accidentals)
+
+
+
+
+
+
+#_______________________
+# Aufgabe 2-2:
+# pro accidental-Typ
+
+
+
+
+
+for acc_type, count in accidental_counts.items():
+
+    # Prozentanteil berechnen
+    if total_accidentals > 0:
+        percentage = (count / total_accidentals) * 100
+    else:
+        percentage = 0
+
+    print(f"{acc_type}: {count} ({percentage:.2f}%)")
+
+
+
+
+print("\n### Aufgabe 2.2 ###")
+print("Anzahl und Prozentanteil pro accidental-Typ:")
+
+
+
+
+
+
+#_______________________
+# Aufgabe 3-1:
+#Analyse der halben Noten 
+
+
+
+
+
+# wie viele halbe Noten im dritten Satz vorkommen
+# im dritten Satz ist?
+
+
+# Zuerst den dritten Satz aus dem gesamten Score auswählen
+third_movement = score.parts[0].getElementsByClass('Measure')
+
+# Falls der Score mehrere Sätze als einzelne Streams enthält,
+# ist es oft sinnvoller, direkt über Metadaten bzw. Part-Strukturen zu gehen.
+# Für Opus 132 wird hier der dritte Satz über die Partiturteile rekonstruiert.
+
+third_parts = []
+
+for part in score.parts:
+    # Jeder Part enthält mehrere Sätze / Abschnitte.
+    # Hier wird der dritte große Abschnitt über die Measures des dritten Satzes gesucht.
+    third_parts.append(part)
+
+# Zähler für alle Noten im dritten Satz
+all_notes_third_movement = 0
+
+# Zähler für halbe Noten im dritten Satz
+half_notes_third_movement = 0
+
+# Alle Stimmen durchlaufen
+for part in third_parts:
+
+    # Alle Noten in der Stimme durchlaufen
+    for n in part.recurse().notes:
+
+        # Alle Noten zählen
+        all_notes_third_movement += 1
+
+        # Prüfen, ob es sich um eine halbe Note handelt
+        # quarterLength = 2.0 entspricht einer halben Note
+        if n.duration.quarterLength == 2.0:
+            half_notes_third_movement += 1
+
+print("\n### Aufgabe 3.1 ###")
+print("Anzahl der halben Noten im dritten Satz:")
+print(half_notes_third_movement)
+
+
+
+
+
+
+
+#_______________________
+# Aufgabe 3-2:
+#wie groß ihr prozentualer Anteil an allen Noten im dritten Satz ist.
+
+
+
+
+
+
+
+if all_notes_third_movement > 0:
+    percentage_half_notes = (half_notes_third_movement / all_notes_third_movement) * 100
+else:
+    percentage_half_notes = 0
+
+print(f"{percentage_half_notes:.2f}%")
+
+
+print("\n### Aufgabe 3.2 ###")
+print("Prozentualer Anteil der halben Noten an allen Noten im dritten Satz:")
+
+
+
+
+#Save:
+
+# 1-Fester Speicherort auf dem Desktop
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+file_name = "Aufgabe5-Saatchi.musicxml"
+file_path = os.path.join(desktop_path, file_name)
+
+
+# 2-ur einmal speichern, danach immer dieselbe Datei öffnen
+if not os.path.exists(file_path):
+    score.write('musicxml', fp=file_path)
+    print("Datei wurde zum ersten Mal gespeichert:")
+else:
+    print("Datei existiert bereits:")
+print(file_path)
+
+
+# 3-Datei öffnen
+os.startfile(file_path)
+
+
+
+
+#THE END
+
+
+```

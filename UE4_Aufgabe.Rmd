@@ -1,0 +1,176 @@
+---
+title: "ESMV UE4 Aufgabe"
+output: html_document
+date: "2026-03-23"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+```{python}
+#Importieren aller Module
+from music21 import *
+import os
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+
+
+
+
+
+### Aufgabe zu Übung 4 ###
+
+
+
+
+
+# MuseScore path (wegen Windows)
+us = environment.UserSettings()
+us['musicxmlPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+us['musescoreDirectPNGPath'] = r'C:\Program Files\MuseScore 4\bin\MuseScore4.exe'
+
+
+# 1A. Score and Part erstellen
+score = stream.Score()
+
+# 1B. title + composer
+score.metadata = metadata.Metadata()
+score.metadata.title = "U4 Melodie"
+score.metadata.composer = "Arash Saatchi"
+
+# 1C. Score and Part erstellen
+part = stream.Part()
+
+
+# 2. Notenschlüssel, Tonart, Taktart
+part.append(clef.TrebleClef())
+part.append(key.KeySignature(0)) #C-Dur
+part.append(meter.TimeSignature('4/4')) #4/4-Takt
+
+
+# 3. Vier Takte einer Melodie
+m1 = stream.Measure(number=1)
+m1.insert(0, dynamics.Dynamic('ff'))
+
+m1.append(note.Note("C4", quarterLength=1))
+m1.append(note.Note("D4", quarterLength=1))
+m1.append(note.Note("E4", quarterLength=1))
+m1.append(note.Note("C4", quarterLength=1))
+
+m2 = stream.Measure(number=2)
+m2.insert(0, dynamics.Dynamic('p'))
+
+m2.append(note.Note("E4", quarterLength=1))
+m2.append(note.Note("F4", quarterLength=1))
+m2.append(note.Note("G4", quarterLength=2))
+
+
+m3 = stream.Measure(number=3)
+m3.insert(0, dynamics.Dynamic('f'))
+
+m3.append(note.Note("G4", quarterLength=0.5))
+m3.append(note.Note("A4", quarterLength=0.5))
+m3.append(note.Note("G4", quarterLength=0.5))
+m3.append(note.Note("F4", quarterLength=0.5))
+m3.append(note.Note("E4", quarterLength=1))
+m3.append(note.Note("C4", quarterLength=1))
+
+m4 = stream.Measure(number=4)
+m4.insert(0, dynamics.Dynamic('pp'))
+
+m4.append(note.Note("D4", quarterLength=1))
+m4.append(note.Note("G3", quarterLength=1))
+m4.append(note.Note("C4", quarterLength=2))
+
+
+# 4A. Takte zum Part hinzufügen
+part.append(m1)
+part.append(m2)
+part.append(m3)
+part.append(m4)
+
+
+# 4B. final double barline
+m4.rightBarline = bar.Barline('double')
+
+
+# 5. Part zum Score hinzufügen
+score.append(part)
+
+
+# 6. Fester Speicherort auf dem Desktop
+desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+file_name = "Aufgabe4-Saatchi.musicxml"
+file_path = os.path.join(desktop_path, file_name)
+
+
+# 7. (!!! Neue gefunden) Nur einmal speichern, danach immer dieselbe Datei öffnen
+if not os.path.exists(file_path):
+    score.write('musicxml', fp=file_path)
+    print("Datei wurde zum ersten Mal gespeichert:")
+else:
+    print("Datei existiert bereits:")
+print(file_path)
+
+
+# 8. Datei öffnen
+os.startfile(file_path)
+
+
+
+# THE END
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
