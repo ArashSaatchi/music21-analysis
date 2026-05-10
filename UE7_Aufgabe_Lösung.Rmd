@@ -1,0 +1,117 @@
+---
+title: "ESMV UE7 Aufgabe"
+output: html_document
+date: "2026-04-27"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+import os
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+
+### Aufgabe zu Übung 7 ###
+
+## Aufgabe 1 ##
+piece = corpus.parse("bach/bwv65.2.xml")
+
+piece.show()
+
+#Ich probiere den Code für das Zählen der Intervalle zuerst für Takt 4-5 aus.
+piece.measures(4,5).show()
+#Hier erwarte ich 6 aufsteigende und 1 fallendes Intervall (wie nachgezählt)
+
+int_up = 0
+int_down = 0
+
+piece_m45 = piece.measures(4,5)
+
+for p in piece_m45.parts:
+  notes_part = p.flatten().notes
+  for i in range(0, len(notes_part)-1):
+    if notes_part[i].pitch.midi < notes_part[i+1].pitch.midi:
+      int_up = int_up + 1 
+    elif notes_part[i].pitch.midi > notes_part[i+1].pitch.midi:
+      int_down = int_down + 1
+
+int_up
+int_down
+#der Code scheint zu funktionieren
+#jetzt kann ich ihn für das gesamte Stück laufen lassen
+
+int_up = 0
+int_down = 0
+
+for p in piece.parts:
+  notes_part = p.flatten().notes
+  for i in range(0, len(notes_part)-1):
+    if notes_part[i].pitch.midi < notes_part[i+1].pitch.midi:
+      int_up = int_up + 1 
+    elif notes_part[i].pitch.midi > notes_part[i+1].pitch.midi:
+      int_down = int_down + 1
+      
+int_up
+int_down
+
+## Aufgabe 2 ##
+piece = corpus.parse("beethoven/opus132")
+piece.show()
+
+def vorzeichen_filter(el):
+  if isinstance(el, note.Note):
+    if el.pitch.accidental is not None:
+      return True
+    else:
+      return False
+  else:
+    return False
+
+filter_result = piece.recurse().addFilter(vorzeichen_filter)
+vorzeichen_gesamt = len(list(filter_result))
+#3436 Vorzeichen exkl. Vorzeichen in Akkorden
+
+#Anzahl der einzelnen Vorzeichentypen
+vorzeichen = ['flat', 'sharp', 'double-flat', 'double-sharp']
+for i in vorzeichen:
+  def vorzeichen_filter_typ(el):
+    if isinstance(el, note.Note):
+      if el.pitch.accidental is not None:
+        if el.pitch.accidental.name == i:
+          return True
+        else:
+          return False
+      else:
+        return False
+    else:
+      return False
+    
+  filter_result = piece.recurse().addFilter(vorzeichen_filter_typ)
+  print(i, " Anzahl:", len(list(filter_result)))
+
+391 + 3043 + 2
+#=3436 Vorzeichen
+```
