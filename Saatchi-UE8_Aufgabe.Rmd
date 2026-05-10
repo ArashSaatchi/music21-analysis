@@ -1,0 +1,461 @@
+---
+title: "ESMV UE8 Aufgabe"
+output: html_document
+date: "2026-05-11"
+---
+
+```{r include=FALSE}
+rm(list = ls())
+
+#Laden der Bibliotheken
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("music21")
+py_require("setuptools")
+py_require("typing-extensions")
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+
+
+```{python}
+# Importieren aller Module
+from music21 import *
+
+
+### Aufgabe zu Übung 8 - Aufgabe 1 ###
+
+# Das Stück laden
+piece = corpus.parse('beethoven/opus18no1/movement1.mxl')
+
+# Alle Noten sammeln
+piece_flat_notes = piece.recurse().notes
+
+
+# Zähler
+count_violin1 = 0
+count_viola = 0
+
+
+# Mit getContext()
+for n in piece_flat_notes:
+
+    # Bestimmt den Takt der Note
+    measure = n.getContextByClass(stream.Measure)
+
+    # Bestimmt die Stimme / den Part der Note
+    part = n.getContextByClass(stream.Part)
+
+    if measure is not None and part is not None:
+
+        # Nur Takt 51
+        if measure.measureNumber == 51:
+
+            # Violine I zählen
+            if part.partName == "Violin I":
+                count_violin1 += 1
+
+            # Viola zählen
+            elif part.partName == "Viola":
+                count_viola += 1
+
+
+print("Violine I:", count_violin1)
+print("Viola:", count_viola)
+
+
+# Kontrolle ohne getContext()
+
+for i, p in enumerate(piece.parts):
+    print(i, p.partName)
+
+
+violin1_notes = piece.parts[0].measure(51).recurse().notes
+viola_notes = piece.parts[2].measure(51).recurse().notes
+
+print("Kontrolle Violine I:", len(violin1_notes))
+print("Kontrolle Viola:", len(viola_notes))
+```
+
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+### Aufgabe zu Übung 8  Aufgabe 2 ###
+
+def your_search_function(x):
+   return "Mozart" in x
+#composer
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+```
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+   return "mozart" in x
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+
+```
+
+
+
+
+```{python}
+from music21 import corpus
+
+# genau wie text
+
+def your_search_function(x):
+   return "MOZART" in x
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+
+```
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+
+# funktioniert nicht weil erste buchstabe muss klein Sein
+    return "Mozart" in x.lower() 
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+  
+#funktioniert und sucht nach alle namen mit Alle Art von buchstaben 
+
+    return "mozart" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def piece_function(x):
+  
+  # mann kan 2 namen Schreiben 
+
+    return "symphony" in x.lower() or "sinfonie" in x.lower()
+
+#title
+search = corpus.search(your_search_function, "title")
+
+print(search)
+
+
+```
+
+
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+
+def vals_search_function(x):
+
+
+#manweist Aber nicht welche name gefunden hat
+
+    return "vals" in x.lower() or "walzer" in x.lower()
+
+
+search = corpus.search(your_search_function, "title")
+
+print(search)
+
+
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "gustav holst" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+```
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "haydn" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "bach" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "debussy" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+
+
+```
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "ravel" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "wagner" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "dvorak" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "guitar" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "korsakov" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "schönberg" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "stravinsky" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "tchaikovsky" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "schubert" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+```
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "adagio" in x.lower()
+
+search = corpus.search(your_search_function, "title")
+
+print(search)
+
+```
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "concerto" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+```
+
+
+
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "berio" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+```
+
+
+```{python}
+from music21 import corpus
+
+def your_search_function(x):
+    return "astor piazzolla" in x.lower()
+
+search = corpus.search(your_search_function, "composer")
+
+print(search)
+
+```
+ 
+            
