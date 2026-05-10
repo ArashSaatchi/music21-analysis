@@ -1,0 +1,123 @@
+---
+title: "ESMV UE8"
+output: html_document
+date: "2026-05-04"
+---
+
+```{r}
+rm(list = ls())
+
+library(rstudioapi)
+library(tidyverse)
+
+Sys.unsetenv("VIRTUAL_ENV")
+library(reticulate)
+py_require("MIDIUtil")
+py_require("mido")
+py_require("pandas")
+py_require("music21")
+py_require("partitura")
+py_require("setuptools")
+py_require("typing-extensions")
+py_config()
+py_require()
+
+setwd(dirname(getActiveDocumentContext()$path))  
+```
+
+
+## music21 Grundlagen
+Online-Referenz aller Module von music21:
+https://music21.org/music21docs/moduleReference/index.html
+
+```{python}
+#Importieren aller Module
+from music21 import * 
+
+#Konfigurieren von music21
+#[1] - No - No - Yes
+configure.run()
+```
+
+```{python}
+piece = corpus.parse('beethoven/opus18no1/movement1.mxl')
+
+#Unterschiede zwischen recurse() und flatten()
+
+#recurse() erstellt einen Iterator
+recurse_obj = piece.recurse()
+
+#flatten() gibt einen score (stream) zurück
+flatten_obj = piece.flatten()
+
+piece.measure(30)
+list(piece.measures(30, 30).recurse())
+list(piece.measures(30, 30).flatten())
+
+#activeSite ist der Kontext in dem ein Objekt aufgerufen wurde
+flatten_obj[40].activeSite
+
+#Es können auch spezifische Kontexte für Objekte abgerufen werden.
+flatten_obj[40].getContextByClass(stream.Measure)
+flatten_obj[40].getContextByClass(stream.Part)
+
+
+### Arbeiten mit corpus Modul ###
+
+#Suche nach einem Komponisten im lokalen music21 Korpus
+paths = corpus.getComposer("Bach")
+piece = corpus.parse(paths[2])
+
+piece.show()
+
+#Suche nach Text in allen Metadateneinträgen
+paths = corpus.search("12/8")
+
+paths[1].show()
+
+list(paths)
+
+paths = corpus.search("Bach")
+list(paths)
+
+paths.search("12/8")
+
+#Im corpus Modul liegen alle Metadaten als MetadataBundle
+bundle = corpus.corpora.CoreCorpus().metadataBundle
+
+#In diesem Bundle kann gesucht werden.
+results = bundle.search("beethoven/opus18no1/movement1.mxl")
+
+#Auflisten aller Metadatenfelder in den gesucht werden kann.
+results.listSearchFields()
+
+results[0].metadata.ambitus
+results[0].metadata.timeSignatures
+
+#Suchfunktionen können selber definiert werden um in bestimmten Metadatenfeldern zu suchen.
+
+#Mit lambda können Funktionen definiert werden. Hier z.B. die Suche nach Stücken mit 100 bis 300 Noten.
+results = corpus.search(lambda x: 100 < x < 300, "noteCount")
+
+results[0].show()
+
+#Die Suchfunktion kann auch über eine übliche Funktionsdefinition definiert werden.
+def note_count(x):
+  if 100 < x < 300:
+    return True
+  else:
+    return False
+
+#Die Suchfunktion kann dann der corpus.search Funktion gegeben werden, inkl. dem Feld, das durchsucht werden soll.
+results = corpus.search(note_count, "noteCount")
+
+#Definition einer Suchfunktion um alle Stücke mit dem Wort "Bach" im Titel zu finden.
+def bach_in_title(x):
+  if "Bach" in x:
+    return True
+  else:
+    return False
+
+results = corpus.search(bach_in_title, "title")
+```
+
